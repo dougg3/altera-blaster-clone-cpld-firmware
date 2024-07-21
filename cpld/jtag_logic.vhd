@@ -53,6 +53,7 @@ ARCHITECTURE spec OF jtag_logic IS
 		latch_data_from_host,
 		set_nRD_high,
 		bits_set_pins_from_data,
+		bits_read_from_pins_and_wait_for_nTXE_low,
 		bytes_set_bitcount,
 		bytes_get_tdo_set_tdi,
 		bytes_clock_high_and_shift,
@@ -67,7 +68,7 @@ ARCHITECTURE spec OF jtag_logic IS
 	
 	ATTRIBUTE ENUM_ENCODING: STRING;
 	ATTRIBUTE ENUM_ENCODING OF states: TYPE IS 
-	  "0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111";
+	  "00000 00001 00010 00011 00100 00101 00110 00111 01000 01001 01010 01011 01100 01101 01110 01111 10000";
 	
 	SIGNAL carry: STD_LOGIC;
 	SIGNAL do_output: STD_LOGIC;
@@ -117,7 +118,7 @@ BEGIN
 				IF ioshifter(6) = '0' THEN
 					next_state <= wait_for_nRXF_low; -- read next byte from host
 				ELSE
-					next_state <= wait_for_nTXE_low; -- output byte to host
+					next_state <= bits_read_from_pins_and_wait_for_nTXE_low; -- read pins on next clock cycle
 				END IF;
 				
 			-- ============================ BYTE OUTPUT (SHIFT OUT 8 BITS)
@@ -142,7 +143,7 @@ BEGIN
 			
 			-- ============================ OUTPUT BYTE TO HOST
 			
-			WHEN wait_for_nTXE_low =>
+			WHEN wait_for_nTXE_low | bits_read_from_pins_and_wait_for_nTXE_low =>
 				IF nTXE = '0' THEN
 					next_state <= set_WR_high;
 				ELSE
@@ -201,6 +202,9 @@ BEGIN
 				B_NCS <= ioshifter(3);
 				B_TDI <= ioshifter(4);
 				B_OE  <= ioshifter(5);
+			END IF;
+			
+			IF state = bits_read_from_pins_and_wait_for_nTXE_low THEN
 				ioshifter <= "000000" & B_ASDO & B_TDO;
 			END IF;
 			
