@@ -41,9 +41,8 @@ END jtag_logic;
 
 ARCHITECTURE spec OF jtag_logic IS
 
-	-- There are exactly 16 states. If this is encoded using 4 bits, there will
-	-- be no unknown/undefined state. The host will send us 64 times "0" to move
-	-- the state machine to a known state. We don't need a power-on reset.
+	-- The host will send us 64 constant bits at the start to move the
+	-- state machine to a known state. We don't need a power-on reset.
 	
 	TYPE states IS
 	(
